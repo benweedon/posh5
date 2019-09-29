@@ -16,14 +16,26 @@
 
         // After the given delay, send the canvas back to PowerShell.
         setTimeout(function () {
+            console.log('Began work to save canvas.')
+
             // Get the canvas as a data URL.
             let canvas = document.getElementById('defaultCanvas0');
             let imageDataUrl = canvas.toDataURL('image/png');
+            let binaryString =  atob(decodeURIComponent(imageDataUrl.split(',')[1]));
+            console.log('Converted canvas data URI to binary string.')
+
+            let bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; ++i) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            console.log('Converted binary string to Uint8Array.')
 
             // Send the data URL to the waiting PowerShell server.
             let request = new XMLHttpRequest();
             request.open('POST', 'http://localhost:' + port, true);
-            request.send(imageDataUrl);
+            request.send(bytes);
+
+            console.log('Sent image to PowerShell server.');
         }, delay);
     </script>
   </head>

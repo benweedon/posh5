@@ -25,13 +25,20 @@
                 $listener.Prefixes.Add("http://localhost:$Port/")
                 $listener.Start()
                 $context = $listener.GetContext()
+                Write-Host "Received connection from p5 tab on port $Port."
 
                 # Read the data URL from the POST message.
-                $dataUrl = (New-Object System.IO.StreamReader $context.Request.InputStream).ReadToEnd()
+                $bytes = @()
+                $reader = New-Object System.IO.BinaryReader $context.Request.InputStream
+                do {
+                    $tempBytes = $reader.ReadBytes(4mb)
+                    $bytes += $tempBytes
+                } while ($tempBytes.Length -gt 0)
+                Write-Host "Read image into byte array."
 
-                # Convert the data URL to bytes and write it out to the file.
-                $bytes = DataUrlToBytes $dataUrl
-                $bytes | Set-Content $OutFile -Encoding Byte
+                # Write the image bytes out to the file.
+                Set-Content -Value $bytes -Path $OutFile -Encoding Byte
+                Write-Host "Wrote image out to file $OutFile."
             } finally {
                 $listener.Stop()
             }
@@ -56,18 +63,4 @@ function ReplaceTemplate([String] $TemplateFile, [String] $SketchPath, [UInt32] 
     $templateContent = $templateContent.Replace("{ delay }", $Delay)
 
     $templateContent | Out-File $TemplateFile -Encoding UTF8
-}
-
-function DataUrlToBytes([String] $DataUrl) {
-    $dataUrlHeader = "data:image/png;"
-    if ($DataUrl.StartsWith($dataUrlHeader)) {
-        $DataUrl = $DataUrl.Remove(0, $dataUrlHeader.Length)
-    }
-
-    $base64Header = "base64,"
-    if ($DataUrl.StartsWith($base64Header)) {
-        $DataUrl = $DataUrl.Remove(0, $base64Header.Length)
-    }
-
-    return [Convert]::FromBase64String($DataUrl)
 }
