@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
+    <script>
+        // Assign the template parameters.
+        const sketchPath = { sketchPath };
+        const port = { port };
+        const delay = { delay };
+
+        // Load the specified sketch.
+        let scriptTag = document.createElement('script');
+        scriptTag.setAttribute('src', sketchPath);
+        document.head.appendChild(scriptTag);
+
+        // After the given delay, send the canvas back to PowerShell.
+        setTimeout(function () {
+            // Get the canvas as a data URL.
+            let canvas = document.getElementById('defaultCanvas0');
+            let imageDataUrl = canvas.toDataURL('image/png');
+
+            // Send the data URL to the waiting PowerShell server.
+            let request = new XMLHttpRequest();
+            request.open('POST', 'http://localhost:' + port, true);
+            request.send(imageDataUrl);
+        }, delay);
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
